@@ -117,6 +117,7 @@ public class MasterVideoListFragment extends Fragment
                                VideoListRequestLoader.VideoListRequestResult data) {
         VideoListResponse response = data.getResultResponse();
         Exception error = data.getError();
+        int id = loader.getId();
 
         // Handel existing errors
         if (error != null) {
@@ -124,28 +125,16 @@ public class MasterVideoListFragment extends Fragment
             return;
         }
 
-        switch (mLoadingMode) {
-            case LOAD_NEW_LIST:
-                mVideoListAdapter.swapVideoListResponse(response);
-
-//                if (mPosition == RecyclerView.NO_POSITION) {
-//                    mPosition = 0;
-//                    // Scroll to the head of the list
-//                    mMasterVideoListRecyclerView.smoothScrollToPosition(mPosition);
-//                }
+        // Handel result response
+        switch (id) {
+            case POPULAR_VIDEO_LIST_LOADER_ID:
+                handelLoadNewListFinished(response);
                 break;
-            case LOAD_MORE:
-                mVideoListAdapter.appendVideoListResponse(response);
+            case POPULAR_VIDEO_LIST_LOADER_NEXT_PAGE_ID:
+                handelLoadNextPageFinished(response);
+                break;
         }
-
-        if (mVideoListAdapter.getItemCount() != 0) {
-            showVideoList();
-        } else {
-            Log.v(TAG, "onLoadFinished: Video list response is empty.");
-        }
-    }
-
-    private void handelLoadException(Exception error) {
+        showVideoList();
     }
 
     @Override
@@ -186,8 +175,9 @@ public class MasterVideoListFragment extends Fragment
                 pastVisiblesItems = mLayoutManager.findFirstVisibleItemPosition();
 
                 if (!isLoadingMore) {
+                    // prevent multiple loading request
                     if ( (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-                        isLoadingMore = false;
+                        isLoadingMore = true;
                         startLoadingMore();
                     }
                 }
@@ -199,6 +189,37 @@ public class MasterVideoListFragment extends Fragment
     /******************************************************************
      *                        Helper Functions                        *
      ******************************************************************/
+
+    /**
+     * Handel the exception throwed by the async task loader
+     * @param error
+     */
+    private void handelLoadException(Exception error) {
+
+    }
+
+    private void handelLoadNewListFinished(VideoListResponse response) {
+        if (response.getItems().size() == 0) {
+            Log.v(TAG, "onLoadFinished: Video list response is empty.");
+        }
+
+        mVideoListAdapter.swapVideoListResponse(response);
+
+//        if (mPosition == RecyclerView.NO_POSITION) {
+//            mPosition = 0;
+//            // Scroll to the head of the list
+//            mMasterVideoListRecyclerView.smoothScrollToPosition(mPosition);
+//        }
+    }
+
+    private void handelLoadNextPageFinished(VideoListResponse response) {
+        if (response.getItems().size() == 0) {
+            Log.v(TAG, "onLoadFinished: Video list response is empty.");
+        }
+
+        isLoadingMore = false;
+        mVideoListAdapter.appendVideoListResponse(response);
+    }
 
     /**
      * Notified to load more data to the list
