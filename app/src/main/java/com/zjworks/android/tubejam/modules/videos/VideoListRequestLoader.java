@@ -1,5 +1,6 @@
 package com.zjworks.android.tubejam.modules.videos;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
@@ -22,7 +23,7 @@ import java.util.HashMap;
  * Created by nemay5131 on 2017-10-18.
  */
 
-public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
+public class VideoListRequestLoader extends AsyncTaskLoader<VideoListRequestLoader.VideoListRequestResult> {
     private static final String TAG = VideoListRequestLoader.class.getSimpleName();
 
     public static final int GET_POPULAR_VIDEO_LIST_KEY = 31;
@@ -30,9 +31,11 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
 
     private static final long MAX_RESULT = 10;
 
+    private Context mContext;
+
     private YouTube mService;
     private Exception mLastError;
-    private VideoListResponse mLastResponse;
+    private VideoListResponse mCurrentResponse, mLastResponse;
     private HashMap<String, String> mParameters;
     private int mModeKey;
 
@@ -85,30 +88,18 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
 
 
     @Override
-    public VideoListResponse loadInBackground() {
+    public VideoListRequestResult loadInBackground() {
         Log.v(TAG, "============= loadInBackground =============");    // test
 
         try {
-            return getResponseFromApi();
+            mCurrentResponse = getResponseFromApi();
+            mLastError = null;
         } catch (Exception e) {
+            mCurrentResponse = null;
             mLastError = e;
-            cancelLoad();
-            return null;
         }
-    }
 
-
-    /**
-     * Handel the request to cancel loading
-     * @return Returns false if the task could not be canceled,
-     * typically because it has already completed normally,
-     * or because startLoading() hasn't been called; returns true otherwise.
-     * When true is returned, the task is still running and
-     * the Loader.OnLoadCanceledListener will be called when the task completes.
-     */
-    @Override
-    protected boolean onCancelLoad() {
-        return super.onCancelLoad();
+        return new VideoListRequestResult(mCurrentResponse, mLastError);
     }
 
 
@@ -120,10 +111,6 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
         super.onReset();
     }
 
-
-    public void setMode(int mode) {
-        mModeKey = mode;
-    }
 
     /**
      * Request a list response from YouTube API
@@ -181,6 +168,30 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
                     new VideoListRequestLoader(mContext, GET_POPULAR_VIDEO_LIST_NEXT_PAGE_KEY);
             loader.mLastResponse = lastResponse;
             return loader;
+        }
+    }
+
+
+    /******************************************************************
+     *                    VideoListRequestResult                      *
+     *              Result that returned by this loader               *
+     ******************************************************************/
+
+    public class VideoListRequestResult {
+        private VideoListResponse mResultResponse;
+        private Exception mLastError;
+
+        VideoListRequestResult(VideoListResponse result, Exception error) {
+            mResultResponse = result;
+            mLastError = error;
+        }
+
+        public Exception getError() {
+            return mLastError;
+        }
+
+        public VideoListResponse getResultResponse() {
+            return mResultResponse;
         }
     }
 }

@@ -15,7 +15,9 @@
 
         <TextView
             android:padding="8dp"
-            android:id="@+id/tv_test_api"
+            android:textSize="21sp"
+            android:layout_gravity="center"
+            android:id="@+id/tv_error_message"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 

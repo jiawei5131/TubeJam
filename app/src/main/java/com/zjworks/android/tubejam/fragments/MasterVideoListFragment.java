@@ -26,7 +26,7 @@ import com.zjworks.android.tubejam.modules.videos.VideoListRequestLoader;
  */
 
 public class MasterVideoListFragment extends Fragment
-                                     implements LoaderManager.LoaderCallbacks<VideoListResponse>,
+                                     implements LoaderManager.LoaderCallbacks<VideoListRequestLoader.VideoListRequestResult>,
                                                 SwipeRefreshLayout.OnRefreshListener {
     private SwipeRefreshLayout mSwipeContainer;
     private RecyclerView mMasterVideoListRecyclerView;
@@ -83,9 +83,7 @@ public class MasterVideoListFragment extends Fragment
         mMasterVideoListRecyclerView.addOnScrollListener(new OnBottomReachedListener());
 
         // Start loading immediately
-        mLoadingMode = LOAD_NEW_LIST;
-        LoaderManager loaderManager = getLoaderManager();
-        loaderManager.restartLoader(POPULAR_VIDEO_LIST_LOADER_ID, null, this);
+        startLoadingNewList();
 
         // Set swipe to refresh container
         mSwipeContainer.setOnRefreshListener(this);
@@ -96,39 +94,48 @@ public class MasterVideoListFragment extends Fragment
      *  To load a video list response from YouTube API.               *
      ******************************************************************/
     @Override
-    public Loader<VideoListResponse> onCreateLoader(int id, Bundle args) {
+    public Loader<VideoListRequestLoader.VideoListRequestResult> onCreateLoader(int id, Bundle args) {
         showLoading();
 
-        VideoListRequestLoader.Builder listRequestBuilder = new VideoListRequestLoader.Builder(getContext());
+        VideoListRequestLoader.Builder listRequestBuilder
+                = new VideoListRequestLoader.Builder(getContext());
         switch (id) {
             case POPULAR_VIDEO_LIST_LOADER_ID:
                 // Loader for a list of popular videos
-                return listRequestBuilder.buildMostPopularVideoListLoader();
+                return listRequestBuilder
+                        .buildMostPopularVideoListLoader();
             case POPULAR_VIDEO_LIST_LOADER_NEXT_PAGE_ID:
-                return listRequestBuilder.buildNextPageLoader(mVideoListAdapter.getVIdeoListResponse());
+                return listRequestBuilder
+                        .buildNextPageLoader(mVideoListAdapter.getVIdeoListResponse());
             default:
                 return listRequestBuilder.buildMostPopularVideoListLoader();
         }
     }
 
     @Override
-    public void onLoadFinished(Loader<VideoListResponse> loader, VideoListResponse data) {
+    public void onLoadFinished(Loader<VideoListRequestLoader.VideoListRequestResult> loader,
+                               VideoListRequestLoader.VideoListRequestResult data) {
+        VideoListResponse response = data.getResultResponse();
+        Exception error = data.getError();
+
+        // Handel existing errors
+        if (error != null) {
+            handelLoadException(error);
+            return;
+        }
+
         switch (mLoadingMode) {
             case LOAD_NEW_LIST:
-                // dismiss the loading indicator
-                if (mSwipeContainer.isRefreshing()) {
-                    mSwipeContainer.setRefreshing(false);
-                }
-                mVideoListAdapter.swapVideoListResponse(data);
+                mVideoListAdapter.swapVideoListResponse(response);
 
-                if (mPosition == RecyclerView.NO_POSITION) {
-                    mPosition = 0;
-                    // Scroll to the head of the list
-                    mMasterVideoListRecyclerView.smoothScrollToPosition(mPosition);
-                }
+//                if (mPosition == RecyclerView.NO_POSITION) {
+//                    mPosition = 0;
+//                    // Scroll to the head of the list
+//                    mMasterVideoListRecyclerView.smoothScrollToPosition(mPosition);
+//                }
                 break;
             case LOAD_MORE:
-                mVideoListAdapter.appendVideoListResponse(data);
+                mVideoListAdapter.appendVideoListResponse(response);
         }
 
         if (mVideoListAdapter.getItemCount() != 0) {
@@ -138,8 +145,11 @@ public class MasterVideoListFragment extends Fragment
         }
     }
 
+    private void handelLoadException(Exception error) {
+    }
+
     @Override
-    public void onLoaderReset(Loader<VideoListResponse> loader) {
+    public void onLoaderReset(Loader<VideoListRequestLoader.VideoListRequestResult> loader) {
         mVideoListAdapter.swapVideoListResponse(null);
     }
 
@@ -152,10 +162,7 @@ public class MasterVideoListFragment extends Fragment
      */
     @Override
     public void onRefresh() {
-        // Restart loading
-        mLoadingMode = LOAD_NEW_LIST;
-        LoaderManager loaderManager = getLoaderManager();
-        loaderManager.restartLoader(POPULAR_VIDEO_LIST_LOADER_ID, null, this);
+        startLoadingNewList();
     }
 
     /******************************************************************
@@ -188,6 +195,11 @@ public class MasterVideoListFragment extends Fragment
         }
     }
 
+
+    /******************************************************************
+     *                        Helper Functions                        *
+     ******************************************************************/
+
     /**
      * Notified to load more data to the list
      */
@@ -198,10 +210,14 @@ public class MasterVideoListFragment extends Fragment
         loaderManager.restartLoader(POPULAR_VIDEO_LIST_LOADER_NEXT_PAGE_ID, null, this);
     }
 
-
-    /******************************************************************
-     *                        Helper Functions                        *
-     ******************************************************************/
+    /**
+     * Start loading the new list immediately
+     */
+    private void startLoadingNewList() {
+        mLoadingMode = LOAD_NEW_LIST;
+        LoaderManager loaderManager = getLoaderManager();
+        loaderManager.restartLoader(POPULAR_VIDEO_LIST_LOADER_ID, null, this);
+    }
 
     /**
      * Show the progress bar and hide the recycler view
@@ -214,10 +230,12 @@ public class MasterVideoListFragment extends Fragment
                 mMasterVideoListRecyclerView.setVisibility(View.INVISIBLE);
 
                 if (!mSwipeContainer.isRefreshing()) {
+                    // If not refreshing, show the progress bar
                     mProgressBar.setVisibility(View.VISIBLE);
                 }
                 break;
             case LOAD_MORE:
+                // Show the bottom progress bar
                 mBottomProgressBar.setVisibility(View.VISIBLE);
         }
 
@@ -230,12 +248,21 @@ public class MasterVideoListFragment extends Fragment
         // Always hide first
         switch (mLoadingMode) {
             case LOAD_NEW_LIST:
+                // Not refreshing, hence hide the progress bar
                 if (!mSwipeContainer.isRefreshing()) {
                     mProgressBar.setVisibility(View.INVISIBLE);
                 }
+
+                // dismiss the loading indicator
+                if (mSwipeContainer.isRefreshing()) {
+                    mSwipeContainer.setRefreshing(false);
+                }
+
+                // Show the recycler view
                 mMasterVideoListRecyclerView.setVisibility(View.VISIBLE);
                 break;
             case LOAD_MORE:
+                // Load more to append the list, hence dismiss the bottom progress bar
                 mBottomProgressBar.setVisibility(View.GONE);
         }
     }

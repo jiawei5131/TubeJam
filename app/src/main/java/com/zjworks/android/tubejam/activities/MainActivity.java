@@ -25,7 +25,6 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeScopes;
 import com.google.api.services.youtube.model.Video;
@@ -37,7 +36,6 @@ import com.zjworks.android.tubejam.utils.TubeJamUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,7 +45,7 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class MainActivity extends AppCompatActivity
                           implements EasyPermissions.PermissionCallbacks {
     private GoogleAccountCredential mCredential;
-    private TextView mTestTextView;
+    private TextView mErrorMessageTextView;
     private ProgressBar mProgressBar;
     private FragmentManager mFragmentManager;
     private MasterVideoListFragment mMasterVideoListFragment;
@@ -77,11 +75,11 @@ public class MainActivity extends AppCompatActivity
                             .commit();
                     return true;
                 case R.id.navigation_dashboard:
-                    mTestTextView.setText(R.string.title_dashboard);
+                    mErrorMessageTextView.setText(R.string.title_dashboard);
                     getResultsFromApi();
                     return true;
                 case R.id.navigation_notifications:
-                    mTestTextView.setText(R.string.title_notifications);
+                    mErrorMessageTextView.setText(R.string.title_notifications);
                     return true;
             }
             return false;
@@ -96,9 +94,9 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTestTextView = (TextView) findViewById(R.id.tv_test_api);
-        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        mErrorMessageTextView = findViewById(R.id.tv_error_message);
+        mProgressBar = findViewById(R.id.progress_bar);
+        BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         // Initialize credentials and service object.
@@ -109,11 +107,6 @@ public class MainActivity extends AppCompatActivity
         // and display a list of videos
         mMasterVideoListFragment = new MasterVideoListFragment();
         mFragmentManager = getSupportFragmentManager();
-
-//        mFragmentManager.beginTransaction()
-//                .add(R.id.master_video_list_container, mMasterVideoListFragment)
-//                .commit();
-
 
     }
 
@@ -132,7 +125,7 @@ public class MainActivity extends AppCompatActivity
         } else if (mCredential.getSelectedAccountName() == null) {
             chooseAccount();
         } else if (! TubeJamUtils.isDeviceOnline(this)) {
-            mTestTextView.setText("No network connection available.");
+            mErrorMessageTextView.setText("No network connection available.");
         } else {
             new MakeRequestTask(mCredential).execute();
         }
@@ -192,7 +185,7 @@ public class MainActivity extends AppCompatActivity
         switch(requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
-                    mTestTextView.setText(
+                    mErrorMessageTextView.setText(
                             "This app requires Google Play Services. Please install " +
                                     "Google Play Services on your device and relaunch this app.");
                 } else {
@@ -344,7 +337,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         protected void onPreExecute() {
-            mTestTextView.setText("");
+            mErrorMessageTextView.setText("");
             mProgressBar.setVisibility(View.VISIBLE);
         }
 
@@ -352,10 +345,10 @@ public class MainActivity extends AppCompatActivity
         protected void onPostExecute(List<String> output) {
             mProgressBar.setVisibility(View.INVISIBLE);
             if (output == null || output.size() == 0) {
-                mTestTextView.setText("No results returned.");
+                mErrorMessageTextView.setText("No results returned.");
             } else {
                 output.add(0, "Data retrieved using the YouTube Data API:");
-                mTestTextView.setText(TextUtils.join("\n", output));
+                mErrorMessageTextView.setText(TextUtils.join("\n", output));
             }
         }
 
@@ -373,11 +366,11 @@ public class MainActivity extends AppCompatActivity
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             MainActivity.REQUEST_AUTHORIZATION);
                 } else {
-                    mTestTextView.setText("The following error occurred:\n"
+                    mErrorMessageTextView.setText("The following error occurred:\n"
                             + mLastError.getMessage());
                 }
             } else {
-                mTestTextView.setText("Request cancelled.");
+                mErrorMessageTextView.setText("Request cancelled.");
             }
         }
     }
