@@ -9,13 +9,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.android.youtube.player.YouTubeInitializationResult;
-import com.google.android.youtube.player.YouTubeThumbnailLoader;
-import com.google.android.youtube.player.YouTubeThumbnailView;
+import com.bumptech.glide.Glide;
+import com.google.api.services.youtube.model.Thumbnail;
+import com.google.api.services.youtube.model.ThumbnailDetails;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.zjworks.android.tubejam.R;
-import com.zjworks.android.tubejam.utils.Config;
 import com.zjworks.android.tubejam.utils.TubeJamUtils;
 
 import java.util.List;
@@ -25,8 +24,9 @@ import java.util.List;
  */
 
 public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.VideoListAdapterViewHolder> {
+
     private Context mContext;
-    private VideoListResponse mVideoListResposne;
+    private VideoListResponse mVideoListResponse;
     private List<Video> responseVideos;
 
     // For Toast instance reference
@@ -34,9 +34,10 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
 
     public VideoListAdapter(@NonNull Context context) {
         mContext = context;
-        mVideoListResposne = null;
+        mVideoListResponse = null;
         responseVideos = null;
     }
+
 
 
     /**
@@ -69,52 +70,13 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
      */
     @Override
     public void onBindViewHolder(VideoListAdapterViewHolder holder, final int position) {
-        holder.thumbnailView.initialize(Config.DEVELOPER_KEY,
-                new YouTubeThumbnailView.OnInitializedListener() {
+        ImageView imageView = holder.thumbnailView;
+        ThumbnailDetails thumbnailDetails = responseVideos.get(position).getSnippet().getThumbnails();
+        Thumbnail thumbnail = getHighestResolutionThumbnail(thumbnailDetails);
 
-                    /******************************************************************
-                     *           YouTubeThumbnailView.OnInitializedListener           *
-                     ******************************************************************/
-                    @Override
-                    public void onInitializationSuccess(YouTubeThumbnailView youTubeThumbnailView,
-                                                        final YouTubeThumbnailLoader youTubeThumbnailLoader) {
-
-                        // Set thumbnail loader listener
-                        youTubeThumbnailLoader.setOnThumbnailLoadedListener(
-                                new YouTubeThumbnailLoader.OnThumbnailLoadedListener() {
-
-                                    /******************************************************************
-                                     *        YouTubeThumbnailLoader.OnThumbnailLoadedListenr         *
-                                     ******************************************************************/
-                                    @Override
-                                    public void onThumbnailLoaded(YouTubeThumbnailView youTubeThumbnailView,
-                                                                  String s) {
-                                        youTubeThumbnailLoader.release();
-                                    }
-
-                                    @Override
-                                    public void onThumbnailError(YouTubeThumbnailView youTubeThumbnailView,
-                                                                 YouTubeThumbnailLoader.ErrorReason errorReason) {
-                                        Toast.makeText(mContext.getApplicationContext(),
-                                                "Thumbnail load error", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                        );
-
-                        // Set up the video to load
-                        String videoId = responseVideos.get(position).getId();
-                        youTubeThumbnailLoader.setVideo(videoId);
-                    }
-
-                    @Override
-                    public void onInitializationFailure(YouTubeThumbnailView youTubeThumbnailView,
-                                                        YouTubeInitializationResult errorReason) {
-                        String errorMessage =
-                                String.format("onInitializationFailure (%1$s)",
-                                        errorReason.toString());
-                        Toast.makeText(mContext.getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
-                    }
-                });
+        Glide.with(mContext)
+                .load(thumbnail.getUrl())
+                .into(imageView);
     }
 
     @Override
@@ -125,16 +87,30 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
         return 0;
     }
 
+
     /******************************************************************
      *                        Helper Functions                        *
      ******************************************************************/
 
     public void swapVideoListResponse(VideoListResponse videoListResponse) {
-        mVideoListResposne = videoListResponse;
+        mVideoListResponse = videoListResponse;
         responseVideos = videoListResponse.getItems();
         notifyDataSetChanged();
     }
 
+    public void appendVideoListResponse(VideoListResponse videoListResponse) {
+        int oldLast = responseVideos.size();
+        int newItemCount = videoListResponse.getItems().size();
+
+        mVideoListResponse = videoListResponse;
+        responseVideos.addAll(videoListResponse.getItems());
+        notifyItemRangeInserted(oldLast, newItemCount);
+    }
+
+    @NonNull
+    public VideoListResponse getVIdeoListResponse() {
+        return mVideoListResponse;
+    }
 
     /******************************************************************
      *                           View Holder                          *
@@ -159,6 +135,22 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
             String message = "Item " + getAdapterPosition() + " Clicked!";
             TubeJamUtils.displayToastMessage(mContext, mToasts, message);
         }
+    }
+
+
+    private Thumbnail getHighestResolutionThumbnail(ThumbnailDetails thumbnailDetails) {
+        if (thumbnailDetails.getStandard() != null) {
+            // standard
+            return thumbnailDetails.getStandard();
+        } else if (thumbnailDetails.getHigh() != null) {
+            // high
+            return thumbnailDetails.getHigh();
+        } else if (thumbnailDetails.getMedium() != null) {
+            // medium
+            return  thumbnailDetails.getMedium();
+        }
+        // default
+        return thumbnailDetails.getDefault();
     }
 
 

@@ -28,6 +28,13 @@
 
     </FrameLayout>
 
+    <ProgressBar
+        android:id="@+id/progress_bar_on_bottom"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|center"
+        android:visibility="gone"/>
+
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"
         android:layout_width="match_parent"

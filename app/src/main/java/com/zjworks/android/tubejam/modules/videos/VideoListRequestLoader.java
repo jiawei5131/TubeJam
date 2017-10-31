@@ -1,6 +1,7 @@
 package com.zjworks.android.tubejam.modules.videos;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
@@ -25,16 +26,17 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
     private static final String TAG = VideoListRequestLoader.class.getSimpleName();
 
     public static final int GET_POPULAR_VIDEO_LIST_KEY = 31;
+    public static final int GET_POPULAR_VIDEO_LIST_NEXT_PAGE_KEY = 32;
 
     private static final long MAX_RESULT = 10;
 
     private YouTube mService;
     private Exception mLastError;
-    private VideoListResponse mResponse;
+    private VideoListResponse mLastResponse;
     private HashMap<String, String> mParameters;
     private int mModeKey;
 
-    public VideoListRequestLoader(Context context,
+    private VideoListRequestLoader(Context context,
                                   int mode) {
         super(context);
 
@@ -64,6 +66,13 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
                 mParameters.put("chart", "mostPopular");
                 mParameters.put("regionCode", "US");
                 mParameters.put("videoCategoryId", "");
+                break;
+            case GET_POPULAR_VIDEO_LIST_NEXT_PAGE_KEY:
+                // want to get a list of popular videos
+                mParameters.put("chart", "mostPopular");
+                mParameters.put("regionCode", "US");
+                mParameters.put("videoCategoryId", "");
+                mParameters.put("pageToken", mLastResponse.getNextPageToken());
                 break;
             default:
                 // mode key invalid
@@ -112,6 +121,10 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
     }
 
 
+    public void setMode(int mode) {
+        mModeKey = mode;
+    }
+
     /**
      * Request a list response from YouTube API
      * @return VideoListResponse that contains useful data
@@ -135,8 +148,39 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListResponse> {
             videosListMostPopularRequest.setVideoCategoryId(mParameters.get("videoCategoryId"));
         }
 
+        if (mParameters.containsKey("pageToken") && !mParameters.get("pageToken").equals("")) {
+            videosListMostPopularRequest.setPageToken(mParameters.get("pageToken"));
+        }
+
         VideoListResponse result = videosListMostPopularRequest.execute();
 
         return result;
+    }
+
+
+    /******************************************************************
+     *                          Builder                               *
+     ******************************************************************/
+
+    public static class Builder {
+        private Context mContext;
+
+
+        public Builder(Context context) {
+            mContext = context;
+        }
+
+
+        public VideoListRequestLoader buildMostPopularVideoListLoader() {
+            return new VideoListRequestLoader(mContext, GET_POPULAR_VIDEO_LIST_KEY);
+        }
+
+
+        public VideoListRequestLoader buildNextPageLoader(@NonNull VideoListResponse lastResponse) {
+            VideoListRequestLoader loader =
+                    new VideoListRequestLoader(mContext, GET_POPULAR_VIDEO_LIST_NEXT_PAGE_KEY);
+            loader.mLastResponse = lastResponse;
+            return loader;
+        }
     }
 }
