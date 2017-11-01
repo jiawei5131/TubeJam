@@ -27,7 +27,7 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
 
     private Context mContext;
     private VideoListResponse mVideoListResponse;
-    private List<Video> responseVideos;
+    private List<Video> mResponseVideos;
 
     // For Toast instance reference
     private Toast[] mToasts;
@@ -35,7 +35,7 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
     public VideoListAdapter(@NonNull Context context) {
         mContext = context;
         mVideoListResponse = null;
-        responseVideos = null;
+        mResponseVideos = null;
     }
 
 
@@ -70,8 +70,8 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
      */
     @Override
     public void onBindViewHolder(VideoListAdapterViewHolder holder, final int position) {
-        ImageView imageView = holder.thumbnailView;
-        ThumbnailDetails thumbnailDetails = responseVideos.get(position).getSnippet().getThumbnails();
+        ImageView imageView = holder.mThumbnailView;
+        ThumbnailDetails thumbnailDetails = mResponseVideos.get(position).getSnippet().getThumbnails();
         Thumbnail thumbnail = getHighestResolutionThumbnail(thumbnailDetails);
 
         Glide.with(mContext)
@@ -81,8 +81,8 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
 
     @Override
     public int getItemCount() {
-        if (responseVideos != null) {
-            return responseVideos.size();
+        if (mResponseVideos != null) {
+            return mResponseVideos.size();
         }
         return 0;
     }
@@ -94,17 +94,29 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
 
     public void swapVideoListResponse(VideoListResponse videoListResponse) {
         mVideoListResponse = videoListResponse;
-        responseVideos = videoListResponse.getItems();
+        mResponseVideos = videoListResponse == null ? null : videoListResponse.getItems();
         notifyDataSetChanged();
     }
 
     public void appendVideoListResponse(VideoListResponse videoListResponse) {
-        int oldLast = responseVideos.size();
-        int newItemCount = videoListResponse.getItems().size();
+        int oldVideosSize = 0, newVideosSize = 0;
+
+        if (videoListResponse != null) {
+            List<Video> newVideos = videoListResponse.getItems();
+            newVideosSize = newVideos.size();
+
+            if (mResponseVideos != null ) {
+                // Append to the original list
+                oldVideosSize = mResponseVideos.size();
+                mResponseVideos.addAll(newVideos);
+            } else {
+                // mResponseVideos == null
+                mResponseVideos = newVideos;
+            }
+        }
 
         mVideoListResponse = videoListResponse;
-        responseVideos.addAll(videoListResponse.getItems());
-        notifyItemRangeInserted(oldLast, newItemCount);
+        notifyItemRangeInserted(oldVideosSize, newVideosSize);
     }
 
     @NonNull
@@ -121,11 +133,11 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
      */
     class VideoListAdapterViewHolder extends RecyclerView.ViewHolder
                                      implements View.OnClickListener {
-        final ImageView thumbnailView;
+        final ImageView mThumbnailView;
 
         VideoListAdapterViewHolder(View itemView) {
             super(itemView);
-            thumbnailView = itemView.findViewById(R.id.iv_master_video_list_item_thumbnail);
+            mThumbnailView = itemView.findViewById(R.id.iv_master_video_list_item_thumbnail);
 
             itemView.setOnClickListener(this);
         }

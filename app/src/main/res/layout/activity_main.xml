@@ -32,8 +32,8 @@
 
     <ProgressBar
         android:id="@+id/progress_bar_on_bottom"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:layout_gravity="bottom|center"
         android:visibility="gone"/>
 

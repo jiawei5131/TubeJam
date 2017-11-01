@@ -32,21 +32,6 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-
-    // Support Library
-    compile 'com.android.support:appcompat-v7:26.+'
-    compile 'com.android.support:design:26.+'
-    compile 'com.android.support:support-vector-drawable:26.+'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-
-    // Glide
-    compile 'com.github.bumptech.glide:glide:4.2.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.2.0'
-
-    // Google API
-    compile 'com.google.android.gms:play-services-auth:11.0.4'
-    compile 'pub.devrel:easypermissions:0.3.0'
     compile('com.google.api-client:google-api-client-android:1.23.0') {
         exclude group: 'org.apache.httpcomponents'
     }
@@ -54,5 +39,16 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
     }
 
+    compile 'com.android.support:appcompat-v7:26.+'
+    compile 'com.android.support:design:26.+'
+    compile 'com.android.support:support-vector-drawable:26.+'
+
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+
+    compile 'com.github.bumptech.glide:glide:4.2.0'
+    compile 'com.google.android.gms:play-services-auth:11.0.4'
+    compile 'pub.devrel:easypermissions:0.3.0'
+
     testCompile 'junit:junit:4.12'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.2.0'
 }
