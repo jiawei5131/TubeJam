@@ -89,8 +89,6 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListRequestLoad
 
     @Override
     public VideoListRequestResult loadInBackground() {
-        Log.v(TAG, "============= loadInBackground =============");    // test
-
         try {
             mCurrentResponse = getResponseFromApi();
             mLastError = null;

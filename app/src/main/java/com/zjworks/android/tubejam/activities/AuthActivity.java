@@ -32,10 +32,10 @@ public class AuthActivity extends AppCompatActivity
     private GoogleAccountCredential mCredential;
     private Toast[] mToasts;
 
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+    static final int REQUEST_ACCOUNT_PICKER = TubeJamUtils.REQUEST_ACCOUNT_PICKER;
+    static final int REQUEST_AUTHORIZATION = TubeJamUtils.REQUEST_AUTHORIZATION;
+    static final int REQUEST_GOOGLE_PLAY_SERVICES = TubeJamUtils.REQUEST_GOOGLE_PLAY_SERVICES;
+    static final int REQUEST_PERMISSION_GET_ACCOUNTS = TubeJamUtils.REQUEST_PERMISSION_GET_ACCOUNTS;
 
     private static final String PREF_ACCOUNT_NAME = "accountName";
 
@@ -54,7 +54,12 @@ public class AuthActivity extends AppCompatActivity
         // Initialize credentials
         Authorizer.initCredential(this);
         mCredential = Authorizer.getCredential();
+
+        // Try to sign in automatically
+        signInCheck();
     }
+
+
 
 
     /**
@@ -79,7 +84,7 @@ public class AuthActivity extends AppCompatActivity
                             getResources().getString(R.string.google_service_not_available_error_message)
                     );
                 } else {
-                    signIn();
+                    signInCheck();
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -95,13 +100,13 @@ public class AuthActivity extends AppCompatActivity
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
-                        signIn();
+                        signInCheck();
                     }
                 }
                 break;
             case REQUEST_AUTHORIZATION:
                 if (resultCode == RESULT_OK) {
-                    signIn();
+                    signInCheck();
                 }
                 break;
         }
@@ -118,7 +123,7 @@ public class AuthActivity extends AppCompatActivity
 
         switch (id) {
             case R.id.tv_sign_in:
-                signIn();
+                chooseAccount();
         }
     }
 
@@ -128,16 +133,46 @@ public class AuthActivity extends AppCompatActivity
      ******************************************************************/
 
     /**
-     * Try to choose an account for google play service
+     * Try to continue if an account has already chosen
      */
-    private void signIn() {
+    private void signInCheck() {
         if (! TubeJamUtils.isGooglePlayServicesAvailable(this)) {
             TubeJamUtils.acquireGooglePlayServices(this);
-        } else if (mCredential.getSelectedAccountName() == null) {
-            chooseAccount();
-        } else {
+        } else if (hasChosenAccount()) {
             startMainActivity();
         }
+    }
+
+
+    /**
+     * Attempts to set the account used with the API credentials. If an account
+     * name was previously saved it will use that one. Note that the setting the
+     * account to use with the credentials object requires the app to have the
+     * GET_ACCOUNTS permission, which is requested here if it is not already
+     * present. The AfterPermissionGranted annotation indicates that this
+     * function will be rerun automatically whenever the GET_ACCOUNTS permission
+     * is granted.
+     * @return true if an account has been chosen by the user; otherwise false
+     */
+    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
+    private boolean hasChosenAccount() {
+        if (EasyPermissions.hasPermissions(
+                this, Manifest.permission.GET_ACCOUNTS)) {
+            String accountName = getPreferences(Context.MODE_PRIVATE)
+                    .getString(PREF_ACCOUNT_NAME, null);
+            if (accountName != null) {
+                mCredential.setSelectedAccountName(accountName);
+                return true;
+            }
+        } else {
+            // Request the GET_ACCOUNTS permission via a user dialog
+            EasyPermissions.requestPermissions(
+                    this,
+                    getResources().getString(R.string.app_needs_google_service_message),
+                    REQUEST_PERMISSION_GET_ACCOUNTS,
+                    Manifest.permission.GET_ACCOUNTS);
+        }
+        return false;
     }
 
 
@@ -152,38 +187,12 @@ public class AuthActivity extends AppCompatActivity
 
 
     /**
-     * Attempts to set the account used with the API credentials. If an account
-     * name was previously saved it will use that one; otherwise an account
-     * picker dialog will be shown to the user. Note that the setting the
-     * account to use with the credentials object requires the app to have the
-     * GET_ACCOUNTS permission, which is requested here if it is not already
-     * present. The AfterPermissionGranted annotation indicates that this
-     * function will be rerun automatically whenever the GET_ACCOUNTS permission
-     * is granted.
+     * Start an account picker dialog to the user.
      */
-    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     private void chooseAccount() {
-        if (EasyPermissions.hasPermissions(
-                this, Manifest.permission.GET_ACCOUNTS)) {
-            String accountName = getPreferences(Context.MODE_PRIVATE)
-                    .getString(PREF_ACCOUNT_NAME, null);
-            if (accountName != null) {
-                mCredential.setSelectedAccountName(accountName);
-                signIn();
-            } else {
-                // Start a dialog from which the user can choose an account
-                startActivityForResult(
-                        mCredential.newChooseAccountIntent(),
-                        REQUEST_ACCOUNT_PICKER);
-            }
-        } else {
-            // Request the GET_ACCOUNTS permission via a user dialog
-            EasyPermissions.requestPermissions(
-                    this,
-                    getResources().getString(R.string.app_needs_google_service_message),
-                    REQUEST_PERMISSION_GET_ACCOUNTS,
-                    Manifest.permission.GET_ACCOUNTS);
-        }
+        startActivityForResult(
+                mCredential.newChooseAccountIntent(),
+                REQUEST_ACCOUNT_PICKER);
     }
 
 

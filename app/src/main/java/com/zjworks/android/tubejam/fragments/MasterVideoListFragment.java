@@ -1,5 +1,7 @@
 package com.zjworks.android.tubejam.fragments;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,17 +11,18 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Config;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.zjworks.android.tubejam.R;
 import com.zjworks.android.tubejam.modules.videos.VideoListAdapter;
 import com.zjworks.android.tubejam.modules.videos.VideoListRequestLoader;
+import com.zjworks.android.tubejam.utils.TubeJamUtils;
 
 /**
  * Created by nemay5131 on 2017-10-18.
@@ -33,6 +36,8 @@ public class MasterVideoListFragment extends Fragment
     private ProgressBar mProgressBar, mBottomProgressBar;
     private VideoListAdapter mVideoListAdapter;
     private LinearLayoutManager mLayoutManager;
+    private Context mContext;
+
     private int mPosition = RecyclerView.NO_POSITION;
 
     // Loader Key
@@ -89,12 +94,27 @@ public class MasterVideoListFragment extends Fragment
         mSwipeContainer.setOnRefreshListener(this);
     }
 
+
+    /**
+     * Obtain information of the context that used the fragment
+     * @param context
+     */
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mContext = context;
+    }
+
     /******************************************************************
      *                        LoaderCallbacks                         *
      *  To load a video list response from YouTube API.               *
      ******************************************************************/
+    private boolean isLoadingData = false;  // Prevent multiple loadings
+
     @Override
     public Loader<VideoListRequestLoader.VideoListRequestResult> onCreateLoader(int id, Bundle args) {
+        // prevent other loaders start loading
+        isLoadingData = true;
         showLoading();
 
         VideoListRequestLoader.Builder listRequestBuilder
@@ -134,6 +154,9 @@ public class MasterVideoListFragment extends Fragment
                 handelLoadNextPageFinished(response);
                 break;
         }
+
+        // unlock
+        isLoadingData = false;
         showVideoList();
     }
 
@@ -157,7 +180,6 @@ public class MasterVideoListFragment extends Fragment
     /******************************************************************
      *                  RecyclerView.OnScrollListener                 *
      ******************************************************************/
-    private boolean isLoadingMore = false;
 
     /**
      * Load more when reached the bottom of the list
@@ -169,15 +191,14 @@ public class MasterVideoListFragment extends Fragment
             int pastVisiblesItems, visibleItemCount, totalItemCount;
 
             if(dy > 0) {
-                //check for scroll down
+                // Check for scroll down
                 visibleItemCount = mLayoutManager.getChildCount();
                 totalItemCount = mLayoutManager.getItemCount();
                 pastVisiblesItems = mLayoutManager.findFirstVisibleItemPosition();
 
-                if (!isLoadingMore) {
+                if (!isLoadingData) {
                     // prevent multiple loading request
                     if ( (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-                        isLoadingMore = true;
                         startLoadingMore();
                     }
                 }
@@ -195,14 +216,28 @@ public class MasterVideoListFragment extends Fragment
      * @param error
      */
     private void handelLoadException(Exception error) {
-
+        if (error instanceof GooglePlayServicesAvailabilityIOException) {
+            TubeJamUtils.showGooglePlayServicesAvailabilityErrorDialog(
+                    (Activity) getContext(),
+                    ((GooglePlayServicesAvailabilityIOException) error)
+                            .getConnectionStatusCode());
+        } else if (error instanceof UserRecoverableAuthIOException) {
+            ((Activity) mContext).startActivityForResult(
+                    ((UserRecoverableAuthIOException) error).getIntent(),
+                    TubeJamUtils.REQUEST_AUTHORIZATION);
+        } else {
+            // want to display an error
+//            mErrorMessageTextView.setText("The following error occurred:\n"
+//                    + error.getMessage());
+        }
     }
 
-    private void handelLoadNewListFinished(VideoListResponse response) {
-        if (response.getItems().size() == 0) {
-            Log.v(TAG, "onLoadFinished: Video list response is empty.");
-        }
 
+    /**
+     *
+     * @param response
+     */
+    private void handelLoadNewListFinished(VideoListResponse response) {
         mVideoListAdapter.swapVideoListResponse(response);
 
 //        if (mPosition == RecyclerView.NO_POSITION) {
@@ -212,12 +247,12 @@ public class MasterVideoListFragment extends Fragment
 //        }
     }
 
-    private void handelLoadNextPageFinished(VideoListResponse response) {
-        if (response.getItems().size() == 0) {
-            Log.v(TAG, "onLoadFinished: Video list response is empty.");
-        }
 
-        isLoadingMore = false;
+    /**
+     *
+     * @param response
+     */
+    private void handelLoadNextPageFinished(VideoListResponse response) {
         mVideoListAdapter.appendVideoListResponse(response);
     }
 
@@ -244,6 +279,7 @@ public class MasterVideoListFragment extends Fragment
      * Show the progress bar and hide the recycler view
      */
     private void showLoading() {
+
         // show a progress bar
         switch (mLoadingMode) {
             case LOAD_NEW_LIST:

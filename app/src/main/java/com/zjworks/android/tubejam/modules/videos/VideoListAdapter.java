@@ -39,7 +39,6 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
     }
 
 
-
     /**
      * Inflate a view that display video thumbnail and title, and initialize a view holder
      *

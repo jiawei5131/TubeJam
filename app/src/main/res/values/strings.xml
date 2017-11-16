@@ -12,7 +12,12 @@
     <!--    Error Messages  -->
     <string name="google_service_not_available_error_message">
         This app requires Google Play Services. Please install
-        Google Play Services on your device and relaunch this app.</string>
+        Google Play Services on your device and relaunch this app.
+    </string>
     <string name="app_needs_google_service_message">
-        This app needs to access your Google account (via Contacts).</string>
+        This app needs to access your Google account (via Contacts).
+    </string>
+    <string name="offline_message">
+        No network connection available.
+    </string>
 </resources>

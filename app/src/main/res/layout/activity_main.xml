@@ -18,7 +18,7 @@
             android:textSize="21sp"
             android:layout_gravity="center"
             android:id="@+id/tv_error_message"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <ProgressBar
