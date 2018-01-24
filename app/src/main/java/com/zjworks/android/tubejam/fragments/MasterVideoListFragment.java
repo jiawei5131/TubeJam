@@ -1,9 +1,9 @@
 package com.zjworks.android.tubejam.fragments;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -20,6 +20,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlaySe
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.zjworks.android.tubejam.R;
+import com.zjworks.android.tubejam.activities.MainActivity;
 import com.zjworks.android.tubejam.modules.videos.VideoListAdapter;
 import com.zjworks.android.tubejam.modules.videos.VideoListRequestLoader;
 import com.zjworks.android.tubejam.utils.TubeJamUtils;
@@ -37,6 +38,7 @@ public class MasterVideoListFragment extends Fragment
     private VideoListAdapter mVideoListAdapter;
     private LinearLayoutManager mLayoutManager;
     private Context mContext;
+    private VideoListAdapter.OnVideoListItemClickedListener mListener;
 
     private int mPosition = RecyclerView.NO_POSITION;
 
@@ -53,10 +55,29 @@ public class MasterVideoListFragment extends Fragment
 
     public MasterVideoListFragment() {}
 
-    @Nullable
+    /**
+     * Obtain information of the context that used the fragment
+     * @param context
+     */
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mContext = context;
+
+        // Check if the attaching activity has implemented required interface
+        try {
+            mListener = (VideoListAdapter.OnVideoListItemClickedListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement VideoListAdapter.OnVideoListItemClickedListener");
+        }
+    }
+
+
+    @NonNull
     @Override
     public View onCreateView(LayoutInflater inflater,
-                             @Nullable ViewGroup container,
+                             @NonNull ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_master_video_list, container, false);
 
@@ -66,7 +87,7 @@ public class MasterVideoListFragment extends Fragment
         mBottomProgressBar = container.getRootView().findViewById(R.id.progress_bar_on_bottom);
 
         // Set layout manager
-        mLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        mLayoutManager = new LinearLayoutManager(mContext, LinearLayoutManager.VERTICAL, false);
         mMasterVideoListRecyclerView.setLayoutManager(mLayoutManager);
 
         // Set has fixed length
@@ -81,7 +102,7 @@ public class MasterVideoListFragment extends Fragment
         super.onViewCreated(view, savedInstanceState);
 
         // Initialize adapter
-        mVideoListAdapter = new VideoListAdapter(getContext());
+        mVideoListAdapter = new VideoListAdapter(mContext, mListener);
 
         // Adapter and scroll listener
         mMasterVideoListRecyclerView.setAdapter(mVideoListAdapter);
@@ -95,15 +116,6 @@ public class MasterVideoListFragment extends Fragment
     }
 
 
-    /**
-     * Obtain information of the context that used the fragment
-     * @param context
-     */
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        mContext = context;
-    }
 
     /******************************************************************
      *                        LoaderCallbacks                         *
@@ -167,6 +179,7 @@ public class MasterVideoListFragment extends Fragment
 
     /******************************************************************
      *              SwipeRefreshLayout.OnRefreshListener              *
+     *                          Pull to refresh                       *
      ******************************************************************/
 
     /**
@@ -240,11 +253,11 @@ public class MasterVideoListFragment extends Fragment
     private void handelLoadNewListFinished(VideoListResponse response) {
         mVideoListAdapter.swapVideoListResponse(response);
 
-//        if (mPosition == RecyclerView.NO_POSITION) {
-//            mPosition = 0;
-//            // Scroll to the head of the list
-//            mMasterVideoListRecyclerView.smoothScrollToPosition(mPosition);
-//        }
+        if (mPosition == RecyclerView.NO_POSITION) {
+            mPosition = 0;
+            // Scroll to the head of the list
+            mMasterVideoListRecyclerView.smoothScrollToPosition(mPosition);
+        }
     }
 
 

@@ -14,19 +14,20 @@
         android:layout_weight="1">
 
         <TextView
-            android:padding="8dp"
-            android:textSize="21sp"
-            android:layout_gravity="center"
             android:id="@+id/tv_error_message"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="8dp"
+            android:textSize="21sp"
+            tools:text="Error Message shows here." />
 
         <ProgressBar
             android:id="@+id/progress_bar"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center"
-            android:visibility="invisible"/>
+            android:visibility="invisible" />
 
     </FrameLayout>
 
@@ -35,7 +36,7 @@
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_gravity="bottom|center"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"

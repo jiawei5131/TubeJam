@@ -12,11 +12,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.google.api.services.youtube.model.Video;
 import com.zjworks.android.tubejam.R;
+import com.zjworks.android.tubejam.data.TubeJamVideo;
 import com.zjworks.android.tubejam.fragments.MasterVideoListFragment;
+import com.zjworks.android.tubejam.modules.videos.VideoListAdapter;
 import com.zjworks.android.tubejam.utils.TubeJamUtils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+                          implements VideoListAdapter.OnVideoListItemClickedListener {
     private TextView mErrorMessageTextView;
     private FragmentManager mFragmentManager;
     private MasterVideoListFragment mMasterVideoListFragment;
@@ -132,5 +136,27 @@ public class MainActivity extends AppCompatActivity {
                     .add(R.id.master_video_list_container, mMasterVideoListFragment)
                     .commit();
         }
+    }
+
+
+    /******************************************************************
+     *        VideoListAdapter.OnVideoListItemClickedListener         *
+     *  Listen to the click on the video list item on the master list *
+     ******************************************************************/
+    // TODO: Start a new activity to play youtube video
+    /**
+     * Start a new activity or add a fragment to display the YouTube video
+     * player based on the information given in the video.
+     * @param item  a YouTube Video Model that we want to display
+     */
+    @Override
+    public void onVideoListItemClicked(Video item) {
+        // pass the information of the video as serializables
+        TubeJamVideo video = new TubeJamVideo(item);
+
+        // start a new PlayVideoActivity
+        Intent startPlayVideoActivity = new Intent(this, PlayVideoActivity.class);
+        startPlayVideoActivity.putExtra(TubeJamVideo.TUBEJAM_VIDEO_OBJECT_KEY, video);
+        startActivity(startPlayVideoActivity);
     }
 }

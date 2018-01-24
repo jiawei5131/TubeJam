@@ -9,6 +9,12 @@
     <string name="sign_in">Sign In</string>
     <string name="studio_name">ZJWorks</string>
 
+
+    <!--    Video Model Display -->
+    <string name="views">%,d views</string>
+    <string name="share_via">share via</string>
+    <string name="url_copied_to_clipboard">URL copied to clipboard</string>
+
     <!--    Error Messages  -->
     <string name="google_service_not_available_error_message">
         This app requires Google Play Services. Please install

@@ -26,14 +26,24 @@ import java.util.List;
 public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.VideoListAdapterViewHolder> {
 
     private Context mContext;
+    private OnVideoListItemClickedListener mOnVideoListItemClickedListener;
     private VideoListResponse mVideoListResponse;
     private List<Video> mResponseVideos;
 
     // For Toast instance reference
     private Toast[] mToasts;
 
-    public VideoListAdapter(@NonNull Context context) {
+    /******************************************************************
+     *           Interface OnVideoListItemClickedListener             *
+     ******************************************************************/
+    public interface OnVideoListItemClickedListener {
+        void onVideoListItemClicked(Video item);
+    }
+
+
+    public VideoListAdapter(@NonNull Context context, OnVideoListItemClickedListener listener) {
         mContext = context;
+        mOnVideoListItemClickedListener = listener;
         mVideoListResponse = null;
         mResponseVideos = null;
     }
@@ -145,6 +155,10 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
         public void onClick(View view) {
             String message = "Item " + getAdapterPosition() + " Clicked!";
             TubeJamUtils.displayToastMessage(mContext, mToasts, message);
+            int position = getAdapterPosition();
+
+            // start player fragment
+            mOnVideoListItemClickedListener.onVideoListItemClicked(mResponseVideos.get(position));
         }
     }
 
