@@ -1,4 +1,4 @@
-package com.zjworks.android.tubejam.modules.videos;
+package com.zjworks.android.tubejam.modules.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -129,7 +129,7 @@ public class VideoListAdapter extends RecyclerView.Adapter<VideoListAdapter.Vide
     }
 
     @NonNull
-    public VideoListResponse getVIdeoListResponse() {
+    public VideoListResponse getVideoListResponse() {
         return mVideoListResponse;
     }
 

@@ -30,7 +30,8 @@ public final class Authorizer {
         }
     }
 
-    public static GoogleAccountCredential getCredential() {
+    public static GoogleAccountCredential getCredential(Context context) {
+        // initCredential(context);
         return mCredential;
     }
 }

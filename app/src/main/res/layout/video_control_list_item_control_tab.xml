@@ -8,6 +8,7 @@
     android:layout_margin="@dimen/margin_around_small">
 
     <TextView
+        android:id="@+id/tv_video_player_like"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -15,6 +16,7 @@
         tools:text="Like" />
 
     <TextView
+        android:id="@+id/tv_video_player_dislike"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -22,6 +24,7 @@
         tools:text="Dislike" />
 
     <TextView
+        android:id="@+id/tv_video_player_share"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -29,6 +32,7 @@
         tools:text="Share" />
 
     <TextView
+        android:id="@+id/tv_video_player_add_to_list"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"

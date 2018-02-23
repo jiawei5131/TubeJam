@@ -10,6 +10,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.zjworks.android.tubejam.activities.MainActivity;
 
 /**
@@ -103,5 +105,25 @@ public final class TubeJamUtils {
 
         toasts[0] = Toast.makeText(context, message, Toast.LENGTH_SHORT);
         toasts[0].show();
+    }
+
+
+    /**
+     * Handel the exception throwed by the async task loader
+     * @param error
+     */
+    private void handelLoadException(Exception error, Context context) {
+        if (error instanceof GooglePlayServicesAvailabilityIOException) {
+            TubeJamUtils.showGooglePlayServicesAvailabilityErrorDialog(
+                    (Activity) context,
+                    ((GooglePlayServicesAvailabilityIOException) error)
+                            .getConnectionStatusCode());
+        } else if (error instanceof UserRecoverableAuthIOException) {
+            ((Activity) context).startActivityForResult(
+                    ((UserRecoverableAuthIOException) error).getIntent(),
+                    TubeJamUtils.REQUEST_AUTHORIZATION);
+        } else {
+            // want to display an error
+        }
     }
 }

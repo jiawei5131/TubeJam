@@ -20,9 +20,8 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlaySe
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.zjworks.android.tubejam.R;
-import com.zjworks.android.tubejam.activities.MainActivity;
-import com.zjworks.android.tubejam.modules.videos.VideoListAdapter;
-import com.zjworks.android.tubejam.modules.videos.VideoListRequestLoader;
+import com.zjworks.android.tubejam.modules.adapters.VideoListAdapter;
+import com.zjworks.android.tubejam.modules.youtube_api_loaders.videos.VideoListRequestLoader;
 import com.zjworks.android.tubejam.utils.TubeJamUtils;
 
 /**
@@ -138,9 +137,10 @@ public class MasterVideoListFragment extends Fragment
                         .buildMostPopularVideoListLoader();
             case POPULAR_VIDEO_LIST_LOADER_NEXT_PAGE_ID:
                 return listRequestBuilder
-                        .buildNextPageLoader(mVideoListAdapter.getVIdeoListResponse());
+                        .buildNextPageLoader(mVideoListAdapter.getVideoListResponse());
             default:
-                return listRequestBuilder.buildMostPopularVideoListLoader();
+                return listRequestBuilder
+                        .buildMostPopularVideoListLoader();
         }
     }
 

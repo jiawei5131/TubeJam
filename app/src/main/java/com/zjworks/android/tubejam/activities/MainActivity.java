@@ -16,7 +16,7 @@ import com.google.api.services.youtube.model.Video;
 import com.zjworks.android.tubejam.R;
 import com.zjworks.android.tubejam.data.TubeJamVideo;
 import com.zjworks.android.tubejam.fragments.MasterVideoListFragment;
-import com.zjworks.android.tubejam.modules.videos.VideoListAdapter;
+import com.zjworks.android.tubejam.modules.adapters.VideoListAdapter;
 import com.zjworks.android.tubejam.utils.TubeJamUtils;
 
 public class MainActivity extends AppCompatActivity
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity
      *        VideoListAdapter.OnVideoListItemClickedListener         *
      *  Listen to the click on the video list item on the master list *
      ******************************************************************/
-    // TODO: Start a new activity to play youtube video
+
     /**
      * Start a new activity or add a fragment to display the YouTube video
      * player based on the information given in the video.

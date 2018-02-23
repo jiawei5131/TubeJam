@@ -53,7 +53,7 @@ public class AuthActivity extends AppCompatActivity
 
         // Initialize credentials
         Authorizer.initCredential(this);
-        mCredential = Authorizer.getCredential();
+        mCredential = Authorizer.getCredential(this);
 
         // Try to sign in automatically
         signInCheck();

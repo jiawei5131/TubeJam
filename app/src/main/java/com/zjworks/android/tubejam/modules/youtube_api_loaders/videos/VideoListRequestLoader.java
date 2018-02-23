@@ -1,11 +1,8 @@
-package com.zjworks.android.tubejam.modules.videos;
+package com.zjworks.android.tubejam.modules.youtube_api_loaders.videos;
 
-import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
-import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.HttpTransport;
@@ -31,8 +28,6 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListRequestLoad
 
     private static final long MAX_RESULT = 10;
 
-    private Context mContext;
-
     private YouTube mService;
     private Exception mLastError;
     private VideoListResponse mCurrentResponse, mLastResponse;
@@ -47,7 +42,7 @@ public class VideoListRequestLoader extends AsyncTaskLoader<VideoListRequestLoad
         HttpTransport transport = AndroidHttp.newCompatibleTransport();
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         mService = new YouTube
-                .Builder(transport, jsonFactory, Authorizer.getCredential())
+                .Builder(transport, jsonFactory, Authorizer.getCredential(context))
                 .setApplicationName(TubeJamUtils.getApplicationName(context))
                 .build();
 
